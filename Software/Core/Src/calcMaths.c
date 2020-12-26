@@ -30,13 +30,6 @@ int16_t BCDAdder(uint8_t   *sum, uint8_t   *x, uint8_t   *y,int16_t    size);
 int16_t BCDCompare(uint8_t   *x, uint8_t   *y,int16_t    size);
 
 
-// pi = 3.14159265358979323846264338327950288419716939937510
-const   decimal_t    pi = {
-    0,0,
-    {0x31, 0x41, 0x59, 0x26, 0x53, 0x58, 0x97, 0x93}  // 23846264338327950288419716939937510
-	};
-
-
 void    CalcAdd(decimal_t *res,decimal_t *x,decimal_t *y)
 {
 	CalcAddSubtract(res,x,y,REQUEST_ADD);
@@ -120,7 +113,7 @@ void    CalcAddSubtract(decimal_t *res,decimal_t *x,decimal_t *y,char requestAdd
     if(B.sign) // B is negative
         k |= 0x02;
     // now k shoud look like the cases listed above
-    printf("switch(k)=%d\r\n",k);
+//    printf("switch(k)=%d\r\n",k);
     switch(k){
         case 0:   // case 0:    C = (A + B)
             requestAdd = REQUEST_ADD;

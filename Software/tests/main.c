@@ -8,12 +8,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "numbers.h"
-#include "calculator.h"
+#include "calcMaths.h"
 #include "calcUtilities.h"
 #include "keyFunctions.h"
-#include "calcUtilities.h"
-#include "calcMaths.h"
+#include "calculator.h"
 
 #define    EDIT_STRING_SIZE    24
 #define    DISP_STR_LENGTH    EDIT_STRING_SIZE
@@ -25,6 +23,21 @@ decimal_t    registerY;
 char        dispEditString[EDIT_STRING_SIZE];
 display_t    display;
 
+
+// pi = 3.14159265358979323846264338327950288419716939937510
+const   decimal_t    pi = {
+    0,0,
+    {0x31, 0x41, 0x59, 0x26, 0x53, 0x58, 0x97, 0x93}
+    };
+
+// Euler's number e = 2.71828182845904523536028747135266249775724709369995
+const   decimal_t    e = {
+    0,0,
+    {0x27, 0x18, 0x28, 0x45, 0x90, 0x45, 0x23, 0x53}
+    };
+
+
+
 void    TestMultiplying(char *x,char *y);
 void    TestDividing(char *x,char *y);
 void    TestAdding(char *x,char *y,int16_t  doadd);
@@ -35,24 +48,50 @@ void DecimalNumberToString(char *str,int16_t strLength,decimal_t *dec,char radix
 
 int main( int argc, char *argv[] )  {
     int val;
+    decimal_t  regX,regY,regZ,regT;
+    char    xStr[32];
+    char    yStr[32];
+    char    tStr[32];
+
+    if(argc>2)
+        DecimalNumberFromString(&regX,argv[2]);
+    if(argc>3)
+        DecimalNumberFromString(&regY,argv[3]);
+    
+    DecimalNumberFromString(&regT,"0.00");
 
     // argc is one more than the number of arguments.
-    if(strcmp(argv[1],"add")==0){
-        TestAdding(argv[2],argv[3],1);
+    if(strcmp(argv[1],"pi")==0){
+        memcpy(&regX,(decimal_t*)&pi,sizeof(decimal_t));
+        memcpy(&regY,(decimal_t*)&e,sizeof(decimal_t));
+        DecimalNumberToString(xStr,24,&regX,RADIX_DECIMAL);
+        DecimalNumberToString(yStr,24,&regY,RADIX_DECIMAL);
+        printf("pi=%s,e=%s\r\n",xStr,yStr);
+        CalcAdd(&regT,&regX,&regY);
+    } else if(strcmp(argv[1],"add")==0){
+        CalcAdd(&regT,&regX,&regY);
     } else if(strcmp(argv[1],"sub")==0){
-        TestAdding(argv[2],argv[3],0);
+        CalcSubtract(&regT,&regX,&regY);
     } else if(strcmp(argv[1],"mul")==0){
-        TestMultiplying(argv[2],argv[3]);
+        CalcMultiply(&regT,&regX,&regY);
     } else if(strcmp(argv[1],"div")==0){
-        TestDividing(argv[2],argv[3]);
+        CalcDivide(&regT,&regX,&regY);
     } else if(strcmp(argv[1],"sft")==0){
-        val = strtol(argv[2], NULL, 10);
-        TestNibbleShifting(val);
+        val = strtol(argv[3], NULL, 10);
+        ShiftSigNibbles(regX.sig,val,16);
     } else {
         printf("unknown argument %s\r\n",argv[1]);
     }
+    
+    DecimalNumberToString(xStr,24,&regX,RADIX_DECIMAL);
+    DecimalNumberToString(yStr,24,&regY,RADIX_DECIMAL);
+    DecimalNumberToString(tStr,24,&regT,RADIX_DECIMAL);
+    
+    printf("%s,%s,%s,%s\r\n",argv[1],xStr,yStr,tStr);
+ 
 }
 
+#if 0
 void    TestMultiplying(char *x,char *y)
 {
     decimal_t  regX,regY,regZ,regT;
@@ -92,6 +131,7 @@ void    TestDividing(char *x,char *y)
 //    PrintDecimal_tDebug("regY",&regY);
 
     CalcDivide(&regT,&regX,&regY);
+    PrintDecimal_tDebug("regT",&regT);
 
     DecimalNumberToString(xStr,16,&regX,RADIX_DECIMAL);
     DecimalNumberToString(yStr,16,&regY,RADIX_DECIMAL);
@@ -142,6 +182,8 @@ void    TestNibbleShifting(int16_t  shift)
 
     PrintDecimal_tDebug(" after",&regX);
 }
+
+#endif
 
 /*    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **
  *     DecimalNumberFromString - Parses a string for the decimal_t number.
@@ -297,6 +339,8 @@ void DecimalNumberToString(char *str,int16_t strLength,decimal_t *dec,char radix
             sig_index++;
         }
     }
+    
+#if 0
 
     if((strIndex == dpIndex)&&(strIndex<strLength)){  // we still need to add dp
         tstr[strIndex++] = '.';
@@ -306,9 +350,8 @@ void DecimalNumberToString(char *str,int16_t strLength,decimal_t *dec,char radix
     while(strIndex<strLength){
         tstr[strIndex++] = '0';
     }
-
     // now we chop off so many places after the dp and fill the string with spaces.
-    places = 10;
+    places = 16;
     chopIndex = dpIndex+places;
     dpIndex++;
     while(dpIndex<strLength){
@@ -316,7 +359,7 @@ void DecimalNumberToString(char *str,int16_t strLength,decimal_t *dec,char radix
             tstr[dpIndex] = ' ';
         dpIndex++;
     }
-
+#endif
     tstr[strIndex] = 0; // END
     
     // copy it out.

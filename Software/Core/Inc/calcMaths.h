@@ -48,8 +48,6 @@ typedef struct DecimalNumber {
     uint8_t     sig[BCD_DIGIT_BYTES];
 } decimal_t;
 
-// pi = 3.14159265358979323846264338327950288419716939937510
-extern  const   decimal_t    pi;
 
 void    CalcAdd(decimal_t *res,decimal_t *x,decimal_t *y);
 void    CalcSubtract(decimal_t *res,decimal_t *x,decimal_t *y);
