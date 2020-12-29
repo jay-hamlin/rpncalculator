@@ -31,6 +31,7 @@ void	CalcPushStack(decimal_t *dec)
     memcpy(&registerY,&registerX,sizeof(decimal_t));
     memcpy(&registerX,dec,sizeof(decimal_t));
 
+ //   Debug_Printf( "CalcPushStack\n\r");
 }
 
 
@@ -47,6 +48,7 @@ void	CalcPopStack(decimal_t *dec)
     memcpy(&registerY,&registerZ,sizeof(decimal_t));
     memcpy(&registerZ,&registerT,sizeof(decimal_t));
 
+ //   Debug_Printf( "CalcPopStack\n\r");
 }
 
 /*	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**
@@ -63,6 +65,7 @@ void	CalcSwapXY(void)
     memcpy(&temp,&registerY,sizeof(decimal_t));
     memcpy(&registerX,&temp,sizeof(decimal_t));
 
+ //   Debug_Printf( "CalcSwapXY\n\r");
 }
 
 /*	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**
@@ -81,6 +84,8 @@ void	CalcROLStack(void)
     memcpy(&registerY,&registerZ,sizeof(decimal_t));
     memcpy(&registerZ,&registerT,sizeof(decimal_t));
     memcpy(&registerT,&temp,sizeof(decimal_t));
+
+ //   Debug_Printf( "CalcROLStack\n\r");
 
 }
 
@@ -178,13 +183,13 @@ void    ShiftSigNibbles(uint8_t *sigs,int16_t    shift,int16_t    size)
 void    PrintNibbles(uint8_t *sigs,int16_t size)
 {
     int16_t i;
-    printf("Nibbles: ");
+    Debug_Printf("Nibbles: ");
     i=0;
     while(i<size){
         printf("%d,",GetBCDNibble(sigs,i));
         i++;
     }
-    printf("\r\n");
+    Debug_Printf("\r\n");
 }
 
 /*	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**
@@ -198,12 +203,8 @@ void PrintDecimal_tDebug(char *str,decimal_t *dec)
     uint8_t    ch;
     int16_t    sig_index,j;
 
-    sprintf(pStr, "  %s sign=%.1d, exponent=%d ",str,dec->sign,dec->exp);
-#ifdef MAKE_FOR_MAC
-    printf("%s",pStr);
-#else
-    HAL_UART_Transmit(&huart2,(uint8_t*)pStr, strlen(pStr), 1000);
-#endif
+
+    Debug_Printf( "  %s sign=%.1d, exponent=%d ",str,dec->sign,dec->exp);
 
     sprintf(pStr, "      sig=x x x x x x x x x x x x x x x x \n\r");
 
@@ -216,11 +217,28 @@ void PrintDecimal_tDebug(char *str,decimal_t *dec)
         j+=2;
     }
 
+    Debug_Printf("%s",pStr);
+
+}
+
+#include <stdarg.h>
+
+void	Debug_Printf(const char *string,...)
+{
+	  char    pStr[128];
+	  int16_t	len;
+
+	  va_list argptr;
+	  va_start(argptr, string);
+	  vsnprintf(pStr,127, string, argptr);
+	  va_end(argptr);
+
+	 len = strlen(pStr);
+
 #ifdef MAKE_FOR_MAC
     printf("%s",pStr);
 #else
-    HAL_UART_Transmit(&huart2,(uint8_t*)pStr, strlen(pStr), 1000);
+    HAL_UART_Transmit(&huart2,(uint8_t*)pStr, len, 1000);
 #endif
-
 }
 

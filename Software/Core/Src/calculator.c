@@ -21,21 +21,21 @@
 #include "calculator.h"
 
 
-#define NUMBER_KEY_COUNT	11
+#define NUMBER_KEY_COUNT	12
 const char numberKeycodes[NUMBER_KEY_COUNT] = {
 		KEY_0,KEY_1,KEY_2,KEY_3,
 		KEY_4,KEY_5,KEY_6,KEY_7,
-		KEY_8,KEY_9,KEY_DP };
+		KEY_8,KEY_9,KEY_DP,KEY_CHS }; // we made dp and CHS number keys
 
 #define ALPHA_KEY_COUNT	6
 const char alphaKeycodes[ALPHA_KEY_COUNT] ={
 		KEY_A,KEY_B,KEY_C,
 		KEY_D, KEY_E,KEY_F };
 
-#define FUNCTION_KEY_COUNT	17
+#define FUNCTION_KEY_COUNT	16
 const char functionKeycodes[FUNCTION_KEY_COUNT] ={
 		KEY_BASE,KEY_DSP,KEY_DIV,KEY_SEND,
-		KEY_CHS,KEY_X,KEY_COPY,KEY_ROL,
+		KEY_X,KEY_COPY,KEY_ROL,
 		KEY_MINUS,KEY_PASTE,KEY_X_Y,KEY_MOD,
 		KEY_PLUS,KEY_FUNC,KEY_DWN,KEY_DEL,
 		KEY_ENTER };
@@ -70,7 +70,7 @@ void MakeOctalTriple(char *str,uint8_t bin);
  * 	IsNumberKey - Returns an ascii value if this is a number key else zero
  *
  *  INPUT:  keycode
- *  OUTPUT: ascii   - 0,1,2,3,4,5,6,7,8,9
+ *  OUTPUT: ascii   - 0,1,2,3,4,5,6,7,8,9 and  '. for KEY_DP and '-' for KEY_CHS
  *  **	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	*/
 char	IsNumberKey(char keycode)
 {
@@ -81,6 +81,8 @@ char	IsNumberKey(char keycode)
 
 	if(keycode == KEY_DP){
 		ascii=('.');
+	} else if(keycode == KEY_CHS){
+		ascii=('-');
 	}else {
 		i=0;
 		while((i<NUMBER_KEY_COUNT)&& (ascii==0)){
@@ -164,7 +166,8 @@ void	DoInitializeCalculator(void){
 	dispEditString[0]=0;
 	notificationString[0]=0;
 	notificationTimeout=0;
-	functionPending=0;
+	functionPending=false;
+	dspModePending= false;
 
 	DisplayNotification("   JFH-97   ", 1000);
 
@@ -187,7 +190,9 @@ void	DoRunCalculator(uint8_t	keycode){
 		// Is a shift key function pending? (meaning we are waiting for the next key)
 		if(functionPending){
 			DoShiftedFunction(keycode);
-		}else {
+		} else if(dspModePending){
+			DoDSPKeyFunction(keycode);
+		} else {
 			// A number key?
 			if((ch = IsNumberKey(keycode))){
 				if(display.editMode == false){
@@ -248,6 +253,7 @@ void	 AppendDisplayString(char ch)
 
 	len = strlen(dispEditString);
 
+	// if we are at the maximum string length, remove the oldest char
 	if(len>(DIGIT_COUNT-1)){
 		i=0;
 		j=1;
@@ -257,11 +263,20 @@ void	 AppendDisplayString(char ch)
 		len--;
 	}
 
-	dispEditString[len]=ch;
-	len++;
+	// minus sign goes at the front of the line, make room for it
+	if(ch=='-'){
+		i=len-1;
+		j=len;
+		while(j>0){
+			dispEditString[j--]=dispEditString[i--];
+		}
+		dispEditString[0]=ch;
+		len++;
+	} else {
+		dispEditString[len++]=ch;
+	}
+
 	dispEditString[len]=0;
-
-
 
 }
 
@@ -288,14 +303,10 @@ void DisplayNumber(decimal_t *dec)
 {
 
 
-	PrintDecimal_tDebug("X",dec);
+//	PrintDecimal_tDebug("X",dec);
 	DecimalNumberToDisplayString(dispEditString,dec);
 
-
-	HAL_UART_Transmit(&huart2,(uint8_t*)"dsp-->",6, 1000);
-    HAL_UART_Transmit(&huart2,(uint8_t*)dispEditString, strlen(dispEditString), 1000);
-    HAL_UART_Transmit(&huart2,(uint8_t*)"\r\n", 2, 1000);
-
+    Debug_Printf("dsp-->%s\r\n",dispEditString);
 
 	DisplayWriteString(dispEditString);
 

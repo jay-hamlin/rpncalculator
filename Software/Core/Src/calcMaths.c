@@ -28,7 +28,7 @@ void    CalcAddSubtract(decimal_t *res,decimal_t *x,decimal_t *y,char requestAdd
 int16_t BCDSubtractor(uint8_t   *sum, uint8_t   *x, uint8_t   *y,int16_t    size);
 int16_t BCDAdder(uint8_t   *sum, uint8_t   *x, uint8_t   *y,int16_t    size);
 int16_t BCDCompare(uint8_t   *x, uint8_t   *y,int16_t    size);
-
+void    FixResultSignIfZero(decimal_t *res);
 
 void    CalcAdd(decimal_t *res,decimal_t *x,decimal_t *y)
 {
@@ -161,10 +161,13 @@ void    CalcAddSubtract(decimal_t *res,decimal_t *x,decimal_t *y,char requestAdd
             break;
    }
 
-    if(requestAdd == REQUEST_ADD)
-    	// BCDAdder returns carry.  Do we ever need it?
-        (void)BCDAdder(sum,A.sig,B.sig,BCD_DIGIT_COUNT);
-    else{
+    if(requestAdd == REQUEST_ADD){
+    	// BCDAdder returns carry.  It means we need to bump the exponent
+        if(BCDAdder(sum,A.sig,B.sig,BCD_DIGIT_COUNT)){
+        	resultExp += 1;
+        }
+
+    }else{
         if(aIsBigger)
             BCDSubtractor(sum,A.sig,B.sig,BCD_DIGIT_COUNT);
         else
@@ -173,7 +176,7 @@ void    CalcAddSubtract(decimal_t *res,decimal_t *x,decimal_t *y,char requestAdd
         // It is possible for the MSD to be zero in which case we need to left shift one place and add to the exponent.
         if(GetBCDNibble(sum,0)==0){
             ShiftSigNibbles(sum,(-1),BCD_DIGIT_COUNT);
-            resultExp-=1;
+            resultExp -= 1;
         }
     }
 
@@ -181,6 +184,8 @@ void    CalcAddSubtract(decimal_t *res,decimal_t *x,decimal_t *y,char requestAdd
     res->sign = resultSign;
     res->exp = resultExp;
     memcpy(res->sig,sum,BCD_DIGIT_BYTES);
+    
+    FixResultSignIfZero(res);
 }
 
 /*    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **
@@ -277,8 +282,6 @@ int16_t    BCDCompare(uint8_t   *x, uint8_t   *y,int16_t    size)
         }
     }
 
- //   printf("BCDCompare=%d\r\n",compare);
-
     return(compare);
 }
 
@@ -352,6 +355,8 @@ void    CalcMultiply(decimal_t *res,decimal_t *x,decimal_t *y)
     res->sign = resultSign;
     res->exp = resultExp;
     memcpy(res->sig,sum,BCD_DIGIT_BYTES);
+    
+    FixResultSignIfZero(res);
 }
 
 /*    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **
@@ -443,4 +448,27 @@ void    CalcDivide(decimal_t *res,decimal_t *x,decimal_t *y)
     res->sign = resultSign;
     res->exp = resultExp;
     memcpy(res->sig,quotient,BCD_DIGIT_BYTES);
+    
+    FixResultSignIfZero(res);
+}
+
+/*    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **
+ *  FixResultSignIfZero - Zero is defined to be a positive number
+ *  INPUT:  *res - the result of some calculation
+
+ *
+ *  OUTPUT: none
+*  **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    */
+void    FixResultSignIfZero(decimal_t *res)
+{
+    int16_t    i;
+
+    i=0; // start at the MSB , first non-zero result gives us our answer
+    while((res->sig[i] == 0x00) && (i<BCD_DIGIT_BYTES)){
+        i++;
+    }
+    if(i==BCD_DIGIT_BYTES){ // all zeros
+        res->sign = 0;
+        res->exp = 0;
+    }
 }

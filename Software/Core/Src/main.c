@@ -80,6 +80,8 @@ static void StartADCs(void);
 static void HandleLEDBlinker(int16_t tick);
 
 #define    UART_QUEUE_SIZE    16
+uint8_t    uart_rx_data[4];
+
 uint8_t    uartcharqueue[UART_QUEUE_SIZE];
 int16_t    uartqueueHead;
 int16_t    uartqueueTail;
@@ -575,6 +577,8 @@ static void MX_USART2_UART_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN USART2_Init 2 */
+  /* Peripheral interrupt init*/
+  UART_Start_Receive_IT(&huart2,uart_rx_data,1);
 
   /* USER CODE END USART2_Init 2 */
 
@@ -673,7 +677,7 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : PA10 */
   GPIO_InitStruct.Pin = GPIO_PIN_10;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
@@ -714,7 +718,6 @@ static void StartADCs(void)
 
     HAL_ADC_Start_IT(&hadc);
     adcChannel=0;
-
     // when channrl==4 we know all the channels have been read
 
 }
@@ -728,18 +731,18 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* phadc)
     if (adcChannel<ADC_CHANNEL_COUNT){
          adcValues[adcChannel] = adc;
          adcChannel++;
-         if(adcChannel==ADC_CHANNEL_COUNT)
+         if(adcChannel==ADC_CHANNEL_COUNT){
              HAL_ADC_Stop(phadc);
+         }
     }
 
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-    uint8_t    rx_data[4];
 
-     HAL_UART_Receive_IT(&huart2,rx_data,1);
-     PushUARTQueue(rx_data[0]);
+     HAL_UART_Receive_IT(&huart2,uart_rx_data,1);
+     PushUARTQueue(uart_rx_data[0]);
 
 }
 

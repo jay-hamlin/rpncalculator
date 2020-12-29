@@ -17,6 +17,7 @@ void	CalcROLStack(void);
 // printing utils
 void 	PrintDecimal_tDebug(char *str,decimal_t *dec);
 void    PrintNibbles(uint8_t *sigs,int16_t size);
+void	Debug_Printf(const char *string,...);
 
 // digit manipulation
 uint8_t GetBCDNibble(uint8_t *sigs,int16_t    nib);

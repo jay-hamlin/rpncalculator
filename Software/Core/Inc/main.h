@@ -32,7 +32,6 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-extern	UART_HandleTypeDef huart2;
 extern	I2C_HandleTypeDef hi2c1;
 extern	I2C_HandleTypeDef hi2c2;
 extern	UART_HandleTypeDef huart2;

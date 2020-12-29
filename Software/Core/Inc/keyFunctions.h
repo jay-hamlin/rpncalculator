@@ -10,7 +10,9 @@
 
 void	DoKeyFunction(uint8_t keycode);
 void	DoShiftedFunction(uint8_t keycode);
+void	DoDSPKeyFunction(uint8_t keycode);
 
 extern	uint8_t	functionPending;
+extern	uint8_t	dspModePending;
 
 #endif /* INC_KEYFUNCTIONS_H_ */

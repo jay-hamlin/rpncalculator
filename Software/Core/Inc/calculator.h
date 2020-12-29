@@ -40,5 +40,6 @@ typedef struct DisplayMode {
 	char		update;
 } display_t;
 
+extern display_t	display;
 
 #endif /* INC_CALCULATOR_H_ */
