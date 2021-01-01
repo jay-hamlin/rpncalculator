@@ -61,6 +61,7 @@ void	CalcSwapXY(void)
 
 	//memcpy(*destination, *source, size);
     memcpy(&temp,&registerY,sizeof(decimal_t));
+    memcpy(&registerY,&registerX,sizeof(decimal_t));
     memcpy(&registerX,&temp,sizeof(decimal_t));
 
 }
@@ -192,14 +193,14 @@ void    Debug_PrintNibbles(uint8_t *sigs,int16_t size)
  *  INPUT: a label string and a pointer to a decimal_t
  *  OUTPUT: none
  *  **	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	*/
-void Debug_PrintDecimal_t(char *str,decimal_t *dec)
+void Debug_PrintDecimal_t(char *prompt,decimal_t *dec)
 {
     char    pStr[64];
     uint8_t    ch;
     int16_t    sig_index,j;
 
 
-    Debug_Printf( "  %s sign=%.1d, exponent=%d ",str,dec->sign,dec->exp);
+    Debug_Printf( "  %s sign=%.1d, exponent=%d ",prompt,dec->sign,dec->exp);
 
     sprintf(pStr, "      sig=x x x x x x x x x x x x x x x x \n\r");
 
@@ -216,9 +217,9 @@ void Debug_PrintDecimal_t(char *str,decimal_t *dec)
 
 }
 
-void	Debug_PrintStack(void){
+void	Debug_PrintStack(char *prompt){
 
-	Debug_Printf( "Printing stack\n\r");
+	Debug_Printf( "%s stack\n\r",prompt);
 	Debug_PrintDecimal_t("T",&registerT);
 	Debug_PrintDecimal_t("Z",&registerZ);
 	Debug_PrintDecimal_t("Y",&registerY);

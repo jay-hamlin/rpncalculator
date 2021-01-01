@@ -31,41 +31,36 @@ uint8_t	dspModePending;
  *  **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    */
 void	DoKeyFunction(uint8_t keycode)
 {
-	decimal_t	rX,rY;
+	decimal_t	resX,rX,rY;
 
 	switch(keycode){
 	case KEY_DIV:		// divide
-		Debug_PrintStack();
-		Debug_Printf( "pop pop\n\r");
+//		Debug_PrintStack("DIV");
 		CalcPopStack(&rX);
 		CalcPopStack(&rY);
-		Debug_PrintStack();
-
-		CalcDivide(&registerX,&rY,&rX);		// *result, *Y/*X
-
-		Debug_PrintDecimal_t("Z",&registerX);
-															// X/Y, put result in X
+		CalcDivide(&resX,&rY,&rX);		// *result, *Y/*X
+		CalcPushStack(&resX);
 		break;
 	case KEY_X:			// multiply
-		Debug_Printf( "Multiply\n\r");
+//		Debug_PrintStack("MUL");
 		CalcPopStack(&rX);
 		CalcPopStack(&rY);
-		CalcMultiply(&registerX,&rX,&rY);		// *result, *X,*Y
-															// X*Y, put result in X
+		CalcMultiply(&resX,&rX,&rY);	// X*Y, put result in X
+		CalcPushStack(&resX);
 		break;
 	case KEY_MINUS:		// minus
-		Debug_Printf( "Subtract\n\r");
+//		Debug_PrintStack("SUB");
 		CalcPopStack(&rX);
 		CalcPopStack(&rY);
-		CalcSubtract(&registerX,&rY,&rX);		// *result, *X,*Y
-															// X-Y, put result in X
+		CalcSubtract(&resX,&rY,&rX);	// Y-X, put result in X
+		CalcPushStack(&resX);
 		break;
 	case KEY_PLUS:		// add
-		Debug_Printf( "Add\n\r");
+//		Debug_PrintStack("ADD");
 		CalcPopStack(&rX);
 		CalcPopStack(&rY);
-		CalcAdd(&registerX,&rX,&rY);			// *result, *X,*Y
-												// X+Y, put result in X
+		CalcAdd(&resX,&rX,&rY);			// X+Y, put result in X
+		CalcPushStack(&resX);
 		break;
 	case KEY_SEND:		// send to computer
 		break;
@@ -75,8 +70,6 @@ void	DoKeyFunction(uint8_t keycode)
 		CalcROLStack();
 		break;
 	case KEY_PASTE:		// paste to computer
-		// print stack
-		Debug_PrintStack();
 
 		break;
 	case KEY_X_Y:		// X,Y exchange
@@ -94,17 +87,21 @@ void	DoKeyFunction(uint8_t keycode)
 		SetIndicatorLED(INDICATOR_D4, 1);
 		functionPending=true;
 		break;
-	case KEY_DWN:		// rol down ???
+	case KEY_CLX:		// clear X
+		DecimalNumberFromString(&registerX,"0.00");
 		break;
 	case KEY_DEL:		// delete (backspace)
 		break;
 	case KEY_ENTER:		// ENTER
-		CalcPushStack((decimal_t*)&registerX);
+		Debug_PrintStack("ENTER");
+		//CalcPushStack((decimal_t*)&registerX);
 		break;
 	default:
 		break;
 
 	}
+
+	Debug_PrintStack("RES");
 
 }
 

@@ -52,7 +52,7 @@ enum {
     KEY_3       = 16,
     KEY_PLUS    = 17,
     KEY_FUNC    = 1,
-    KEY_DWN     = 2,
+    KEY_CLX     = 2,
     KEY_DEL     = 3,
     KEY_0       = 4,
     KEY_DP      = 5,

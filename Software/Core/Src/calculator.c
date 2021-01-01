@@ -37,7 +37,7 @@ const char functionKeycodes[FUNCTION_KEY_COUNT] ={
 		KEY_BASE,KEY_DSP,KEY_DIV,KEY_SEND,
 		KEY_X,KEY_COPY,KEY_ROL,
 		KEY_MINUS,KEY_PASTE,KEY_X_Y,KEY_MOD,
-		KEY_PLUS,KEY_FUNC,KEY_DWN,KEY_DEL,
+		KEY_PLUS,KEY_FUNC,KEY_CLX,KEY_DEL,
 		KEY_ENTER };
 
 char	IsNumberKey(char keycode);
@@ -183,7 +183,14 @@ void	DoInitializeCalculator(void){
 void	DoRunCalculator(uint8_t	keycode){
 	char	ch;
 	decimal_t	tempX;
-
+#if 0
+	if(keycode){
+		if(keycode&KEYDOWN_EVENT)
+			Debug_Printf("DWN keycode=%d\r\n",(keycode-KEYDOWN_EVENT));
+		else
+			Debug_Printf("UP keycode=%d\r\n",keycode);
+	}
+#endif
 	if(KEYDOWN_EVENT&keycode){
 		keycode &= (-1^KEYDOWN_EVENT);
 
@@ -196,7 +203,6 @@ void	DoRunCalculator(uint8_t	keycode){
 			// A number key?
 			if((ch = IsNumberKey(keycode))){
 				if(display.editMode == false){
-//					HAL_UART_Transmit(&huart2,(uint8_t*)"START EDIT MODE-->\n\r",20, 1000);
 					dispEditString[0]=0; // zero string
 					display.editMode= true; // begin editing new string
 				}
@@ -211,7 +217,6 @@ void	DoRunCalculator(uint8_t	keycode){
 
 			} else if((ch = IsFunctionKey(keycode))){
 				if(display.editMode == true){
-//					HAL_UART_Transmit(&huart2,(uint8_t*)"END EDIT MODE-->\n\r",18, 1000);
 					// move what we have been editing and put it into X
 					DecimalNumberFromString(&tempX,dispEditString);
 					CalcPushStack(&tempX);
