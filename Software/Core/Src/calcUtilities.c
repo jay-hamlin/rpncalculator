@@ -31,7 +31,6 @@ void	CalcPushStack(decimal_t *dec)
     memcpy(&registerY,&registerX,sizeof(decimal_t));
     memcpy(&registerX,dec,sizeof(decimal_t));
 
- //   Debug_Printf( "CalcPushStack\n\r");
 }
 
 
@@ -48,7 +47,6 @@ void	CalcPopStack(decimal_t *dec)
     memcpy(&registerY,&registerZ,sizeof(decimal_t));
     memcpy(&registerZ,&registerT,sizeof(decimal_t));
 
- //   Debug_Printf( "CalcPopStack\n\r");
 }
 
 /*	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**
@@ -65,7 +63,6 @@ void	CalcSwapXY(void)
     memcpy(&temp,&registerY,sizeof(decimal_t));
     memcpy(&registerX,&temp,sizeof(decimal_t));
 
- //   Debug_Printf( "CalcSwapXY\n\r");
 }
 
 /*	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**
@@ -84,8 +81,6 @@ void	CalcROLStack(void)
     memcpy(&registerY,&registerZ,sizeof(decimal_t));
     memcpy(&registerZ,&registerT,sizeof(decimal_t));
     memcpy(&registerT,&temp,sizeof(decimal_t));
-
- //   Debug_Printf( "CalcROLStack\n\r");
 
 }
 
@@ -176,11 +171,11 @@ void    ShiftSigNibbles(uint8_t *sigs,int16_t    shift,int16_t    size)
 
 
 /*	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**
- * 	PrintNibbles - Prints a debug string of significant digits to the console
+ * 	Debug_PrintNibbles - Prints a debug string of significant digits to the console
  *  INPUT:  a pointer to the digits and the length. (some functions have double length digits)
  *  OUTPUT: none
  *  **	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	*/
-void    PrintNibbles(uint8_t *sigs,int16_t size)
+void    Debug_PrintNibbles(uint8_t *sigs,int16_t size)
 {
     int16_t i;
     Debug_Printf("Nibbles: ");
@@ -193,11 +188,11 @@ void    PrintNibbles(uint8_t *sigs,int16_t size)
 }
 
 /*	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**
- * 	PrintDecimal_tDebug - Prints a debug version of a decimal_t to the console
+ * 	Debug_PrintDecimal_t - Prints a debug version of a decimal_t to the console
  *  INPUT: a label string and a pointer to a decimal_t
  *  OUTPUT: none
  *  **	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	*/
-void PrintDecimal_tDebug(char *str,decimal_t *dec)
+void Debug_PrintDecimal_t(char *str,decimal_t *dec)
 {
     char    pStr[64];
     uint8_t    ch;
@@ -218,6 +213,16 @@ void PrintDecimal_tDebug(char *str,decimal_t *dec)
     }
 
     Debug_Printf("%s",pStr);
+
+}
+
+void	Debug_PrintStack(void){
+
+	Debug_Printf( "Printing stack\n\r");
+	Debug_PrintDecimal_t("T",&registerT);
+	Debug_PrintDecimal_t("Z",&registerZ);
+	Debug_PrintDecimal_t("Y",&registerY);
+	Debug_PrintDecimal_t("X",&registerX);
 
 }
 

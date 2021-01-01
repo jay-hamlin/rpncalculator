@@ -370,14 +370,17 @@ void    CalcMultiply(decimal_t *res,decimal_t *x,decimal_t *y)
 *  **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    */
 void    CalcDivide(decimal_t *res,decimal_t *x,decimal_t *y)
 {
-    int16_t    quotientIndex,quote,zeros;
-    char       resultSign,resultExp;
+    int16_t    quotientIndex,quote,zeros,resultExp;
+    char       resultSign;
     uint8_t    quotient[BCD_DIGIT_BYTES];
     uint8_t    divisor[(2*BCD_DIGIT_BYTES)];
     uint8_t    remainder[(2*BCD_DIGIT_BYTES)]; // we keep a double sized working remainder
     
     // quotient is zeroed
     memset(quotient,0,BCD_DIGIT_BYTES);
+
+    Debug_PrintDecimal_t("div x",x);
+    Debug_PrintDecimal_t("div y",y);
 
     // Make sure we are not about to divide by zero.
     // we only need to look at the first digit since all numbers are left justified
@@ -402,7 +405,7 @@ void    CalcDivide(decimal_t *res,decimal_t *x,decimal_t *y)
         else
             resultSign = DECIMAL_SIGN_NEGATIVE;
 
-        resultExp = x->exp-y->exp; // exponent
+        resultExp = x->exp - y->exp; // exponent
 
         quotientIndex=0;
         while(quotientIndex<BCD_DIGIT_COUNT){
@@ -444,11 +447,15 @@ void    CalcDivide(decimal_t *res,decimal_t *x,decimal_t *y)
         }
     }
 
+//    Debug_Printf("2resExp=%d\r\n",resultExp);
+
     // now copy the result
     res->sign = resultSign;
     res->exp = resultExp;
     memcpy(res->sig,quotient,BCD_DIGIT_BYTES);
     
+    Debug_PrintDecimal_t("div res",res);
+
     FixResultSignIfZero(res);
 }
 

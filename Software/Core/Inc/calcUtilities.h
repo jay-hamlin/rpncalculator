@@ -15,8 +15,9 @@ void	CalcSwapXY(void);
 void	CalcROLStack(void);
 
 // printing utils
-void 	PrintDecimal_tDebug(char *str,decimal_t *dec);
-void    PrintNibbles(uint8_t *sigs,int16_t size);
+void 	Debug_PrintDecimal_t(char *str,decimal_t *dec);
+void	Debug_PrintStack(void);
+void    Debug_PrintNibbles(uint8_t *sigs,int16_t size);
 void	Debug_Printf(const char *string,...);
 
 // digit manipulation

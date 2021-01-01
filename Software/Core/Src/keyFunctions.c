@@ -35,10 +35,15 @@ void	DoKeyFunction(uint8_t keycode)
 
 	switch(keycode){
 	case KEY_DIV:		// divide
-		Debug_Printf( "Divide\n\r");
+		Debug_PrintStack();
+		Debug_Printf( "pop pop\n\r");
 		CalcPopStack(&rX);
 		CalcPopStack(&rY);
-		CalcDivide(&registerX,&rX,&rY);		// *result, *X,*Y
+		Debug_PrintStack();
+
+		CalcDivide(&registerX,&rY,&rX);		// *result, *Y/*X
+
+		Debug_PrintDecimal_t("Z",&registerX);
 															// X/Y, put result in X
 		break;
 	case KEY_X:			// multiply
@@ -71,11 +76,7 @@ void	DoKeyFunction(uint8_t keycode)
 		break;
 	case KEY_PASTE:		// paste to computer
 		// print stack
-		Debug_Printf( "Printing stack\n\r");
-		PrintDecimal_tDebug("T",&registerT);
-		PrintDecimal_tDebug("Z",&registerZ);
-		PrintDecimal_tDebug("Y",&registerY);
-		PrintDecimal_tDebug("X",&registerX);
+		Debug_PrintStack();
 
 		break;
 	case KEY_X_Y:		// X,Y exchange
