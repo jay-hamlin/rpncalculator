@@ -87,6 +87,8 @@ int main( int argc, char *argv[] )  {
     } else if(strcmp(argv[1],"sft")==0){
         val = strtol(argv[3], NULL, 10);
         ShiftSigNibbles(regX.sig,val,16);
+    } else if(strcmp(argv[1],"mod")==0){
+        CalcModulo(&regT,&regX,&regY);
     } else {
         printf("unknown argument %s\r\n",argv[1]);
     }

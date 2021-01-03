@@ -35,28 +35,28 @@ void	DoKeyFunction(uint8_t keycode)
 
 	switch(keycode){
 	case KEY_DIV:		// divide
-//		Debug_PrintStack("DIV");
 		CalcPopStack(&rX);
 		CalcPopStack(&rY);
 		CalcDivide(&resX,&rY,&rX);		// *result, *Y/*X
-		CalcPushStack(&resX);
+		if(resX.sign == NOT_A_NUMBER){
+			DisplayNotification("NOT A NUMBER", 2000);
+		}else{
+			DecimalNumberFromString(&registerX,"0.00");
+		}
 		break;
 	case KEY_X:			// multiply
-//		Debug_PrintStack("MUL");
 		CalcPopStack(&rX);
 		CalcPopStack(&rY);
 		CalcMultiply(&resX,&rX,&rY);	// X*Y, put result in X
 		CalcPushStack(&resX);
 		break;
 	case KEY_MINUS:		// minus
-//		Debug_PrintStack("SUB");
 		CalcPopStack(&rX);
 		CalcPopStack(&rY);
 		CalcSubtract(&resX,&rY,&rX);	// Y-X, put result in X
 		CalcPushStack(&resX);
 		break;
 	case KEY_PLUS:		// add
-//		Debug_PrintStack("ADD");
 		CalcPopStack(&rX);
 		CalcPopStack(&rY);
 		CalcAdd(&resX,&rX,&rY);			// X+Y, put result in X
@@ -75,16 +75,20 @@ void	DoKeyFunction(uint8_t keycode)
 	case KEY_X_Y:		// X,Y exchange
 		CalcSwapXY();
 		break;
-	case KEY_MOD:		// modulus
+	case KEY_MOD:		// modulo
+		CalcPopStack(&rX);
+		CalcPopStack(&rY);
+		CalcModulo(&resX,&rY,&rX);		// *result, *Y%*X
+		CalcPushStack(&resX);
 		break;
 	case KEY_BASE:		// DEC,OCT,HEX
 		break;
 	case KEY_DSP:		// set display mode
-		SetIndicatorLED(INDICATOR_D3, 1);
+		SetIndicatorLED(INDICATOR_D1, 1);
 		dspModePending = true;
 		break;
 	case KEY_FUNC:		// shift function
-		SetIndicatorLED(INDICATOR_D4, 1);
+		SetIndicatorLED(INDICATOR_D1, 1);
 		functionPending=true;
 		break;
 	case KEY_CLX:		// clear X
@@ -93,8 +97,7 @@ void	DoKeyFunction(uint8_t keycode)
 	case KEY_DEL:		// delete (backspace)
 		break;
 	case KEY_ENTER:		// ENTER
-		Debug_PrintStack("ENTER");
-		//CalcPushStack((decimal_t*)&registerX);
+		CalcPushStack((decimal_t*)&registerX);
 		break;
 	default:
 		break;
@@ -116,7 +119,7 @@ void	DoShiftedFunction(uint8_t keycode)
 	uint16_t		val;
 	char			notify;
 
-	SetIndicatorLED(INDICATOR_D4, 0);
+	SetIndicatorLED(INDICATOR_D1, 0);
 	functionPending=false;
 	notify=false;
 
@@ -160,7 +163,15 @@ void	DoShiftedFunction(uint8_t keycode)
 }
 
 /*    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **
- *  DoDSPKeyFunction - Handles commands of the "Func" key.
+ *  DoDSPKeyFunction - Handles commands of the "DSP" key.
+ *  	numbers from 0-9 set the number of displayed decimal points
+ *  	Alpha characters set the display modes
+ *  		A = OCTAL
+ *  		B = DECIMAL
+ *  		C = HEXADECIMAL
+ *  		D = FIXED POINT
+ *  		E = SCIENTIFIC NOTATION
+ *  		F = ENGINEERING NOTATION
  *
  *  INPUT:  keycode
  *  OUTPUT: none
@@ -168,13 +179,41 @@ void	DoShiftedFunction(uint8_t keycode)
 void	DoDSPKeyFunction(uint8_t keycode)
 {
 	extern	char	IsNumberKey(char keycode);
+	extern	char	IsAlphaKey(char keycode);
 	char	ch;
+
+
 
 	if((ch = IsNumberKey(keycode))){
 		display.points = ch-'0';
-		display.update=true;
-		dspModePending = false;
-		SetIndicatorLED(INDICATOR_D3, 0);
+	} else {
+		ch = IsAlphaKey(keycode);
+		switch(ch){
+			case 'A':
+				display.radix = RADIX_OCTAL;
+				break;
+			case 'B':
+				display.radix = RADIX_DECIMAL;
+				break;
+			case 'C':
+				display.radix = RADIX_HEXADECIMAL;
+				break;
+			case 'D':
+				display.format = DISP_FORMAT_FIXED;
+				break;
+			case 'E':
+				display.format = DISP_FORMAT_SCI;
+				break;
+			case 'F':
+				display.format = DISP_FORMAT_ENG;
+				break;
+			default:
+				break;
+		}
 	}
+
+	SetIndicatorLED(INDICATOR_D1, 0);
+	display.update=true;
+	dspModePending = false;
 }
 

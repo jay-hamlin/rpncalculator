@@ -51,7 +51,7 @@ typedef struct DigitAddresses {
 	uint8_t		empt;
 } DigitAddress;
 
-#define	DIGIT_COUNT		12
+#define	DISPLAY_DIGIT_COUNT		12
 
 // Exported prototypes for display
 void	DisplayInitialize(void);

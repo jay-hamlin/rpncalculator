@@ -53,6 +53,6 @@ void    CalcAdd(decimal_t *res,decimal_t *x,decimal_t *y);
 void    CalcSubtract(decimal_t *res,decimal_t *x,decimal_t *y);
 void    CalcMultiply(decimal_t *res,decimal_t *x,decimal_t *y);
 void    CalcDivide(decimal_t *quotient,decimal_t *x,decimal_t *y);
-
+void    CalcModulo(decimal_t *res,decimal_t *x,decimal_t *y);
 
 #endif /* INC_CALCMATHS_H_ */

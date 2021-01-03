@@ -43,10 +43,11 @@ const char functionKeycodes[FUNCTION_KEY_COUNT] ={
 char	IsNumberKey(char keycode);
 char	IsAlphaKey(char keycode);
 char	IsFunctionKey(char keycode);
+char	IsNumberKeyInRadix(char keycode);
 void	AppendDisplayString(char ch);
 
 #define	EDIT_STRING_SIZE	24
-#define	DISP_STR_LENGTH	EDIT_STRING_SIZE
+#define	DISP_STR_LENGTH	(DISPLAY_DIGIT_COUNT+1)
 
 decimal_t	registerT;
 decimal_t	registerZ;
@@ -142,6 +143,41 @@ char	IsFunctionKey(char keycode)
 	return(ascii);
 }
 
+/*	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**
+ * 	IsNumberKeyInRadix - The same as IsNumberKey but takes into account the radix display mode
+ *
+ *  INPUT:  keycode
+ *  OUTPUT: ascii   - 0,1,2,3,4,5,6,7,8,9 and  '. for KEY_DP and '-' for KEY_CHS
+ *  **	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	*/
+char	IsNumberKeyInRadix(char keycode)
+{
+	char 		ch,ascii=0;
+
+	if(display.radix == RADIX_OCTAL){
+		ch = IsNumberKey(keycode);
+		if((ch>='0') && (ch<='7')){
+			ascii = ch;
+		}
+	}else if(display.radix == RADIX_DECIMAL){
+		ch = IsNumberKey(keycode);
+		if((ch>='0') && (ch<='9')){
+			ascii = ch;
+		}else if((ch=='.') || (ch<='-')){
+			ascii = ch;
+		}
+	}
+	if(display.radix == RADIX_HEXADECIMAL){
+		ch = IsNumberKey(keycode);
+		if((ch>='0') && (ch<='9')){
+			ascii = ch;
+		}else {
+			ch = IsAlphaKey(keycode);
+			ascii = ch;
+		}
+	}
+
+	return(ascii);
+}
 
 /*	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**
  * 	DoInitializeCalculator - Called from main() once at the begining of time
@@ -182,7 +218,7 @@ void	DoInitializeCalculator(void){
  *  **	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	*/
 void	DoRunCalculator(uint8_t	keycode){
 	char	ch;
-	decimal_t	tempX;
+
 #if 0
 	if(keycode){
 		if(keycode&KEYDOWN_EVENT)
@@ -201,7 +237,8 @@ void	DoRunCalculator(uint8_t	keycode){
 			DoDSPKeyFunction(keycode);
 		} else {
 			// A number key?
-			if((ch = IsNumberKey(keycode))){
+
+			if((ch = IsNumberKeyInRadix(keycode))){
 				if(display.editMode == false){
 					dispEditString[0]=0; // zero string
 					display.editMode= true; // begin editing new string
@@ -218,10 +255,10 @@ void	DoRunCalculator(uint8_t	keycode){
 			} else if((ch = IsFunctionKey(keycode))){
 				if(display.editMode == true){
 					// move what we have been editing and put it into X
-					DecimalNumberFromString(&tempX,dispEditString);
-					CalcPushStack(&tempX);
+					DecimalNumberFromString(&registerX,dispEditString);
 					display.editMode=false;
 				}
+
 				DoKeyFunction(keycode);
 				display.update=true;
 			}
@@ -259,7 +296,7 @@ void	 AppendDisplayString(char ch)
 	len = strlen(dispEditString);
 
 	// if we are at the maximum string length, remove the oldest char
-	if(len>(DIGIT_COUNT-1)){
+	if(len>(DISPLAY_DIGIT_COUNT-1)){
 		i=0;
 		j=1;
 		while(j<len){
@@ -306,12 +343,13 @@ void	DisplayNotification(char	*str, int16_t	timoutms)
  *  **	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	*/
 void DisplayNumber(decimal_t *dec)
 {
-
+	int16_t	len;
 
 //	PrintDecimal_tDebug("X",dec);
 	DecimalNumberToDisplayString(dispEditString,dec);
 
-    Debug_Printf("dsp-->%s\r\n",dispEditString);
+	len = strlen(dispEditString);
+    Debug_Printf("DISPLAY %d [%s]\r\n",len,dispEditString);
 
 	DisplayWriteString(dispEditString);
 
@@ -443,7 +481,10 @@ void DecimalNumberFromString(decimal_t *dec,char *str)
     }
     
     dec->exp = calculatedExp;
+
     memcpy(dec->sig,sig_temp, BCD_DIGIT_BYTES);
+
+    FixResultSignIfZero(dec);
 
 }
 
@@ -458,7 +499,7 @@ void DecimalNumberFromString(decimal_t *dec,char *str)
 
 void DecimalNumberToDisplayString(char *str,decimal_t *dec)
 {
-    uint8_t     digits;
+    int16_t     digits,i;
 
     if(dec->sign==NOT_A_NUMBER){
     	sprintf(str,"NOT A NUMBER");
@@ -475,7 +516,19 @@ void DecimalNumberToDisplayString(char *str,decimal_t *dec)
 					// Will this number fit into the 12 digit display?
 					// if not we need to switch to SCI or ENG mode
 					// -3.14E1 == -31.40
-					digits = 1 + 1 + 1 + dec->exp + display.points;
+					digits = 1 + 1 + 1 + display.points;
+					if(dec->exp<0){
+						digits -= dec->exp;
+						i = 0 - dec->exp;
+					}else{
+						digits += dec->exp;
+						i = 0 + dec->exp;
+					}
+					if(dec->sign==DECIMAL_SIGN_NEGATIVE) digits++;
+					if(i>10) digits++;
+					if(i>100) digits++;
+					if(i>100) digits++;
+
 					if(digits>=12){
 						NumberToStringDEC_SCI(str,dec);
 					}else{
@@ -585,7 +638,7 @@ void    MakeOctalTriple(char *str,uint8_t bin)
  *  **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    */
 void NumberToStringDEC_FIXED(char *str,decimal_t *dec)
 {
-    char        tstr[DISP_STR_LENGTH];
+    char        tstr[2*DISP_STR_LENGTH];
     uint8_t     ch;
     int16_t     sig_index;
     int16_t     strIndex;
@@ -597,7 +650,7 @@ void NumberToStringDEC_FIXED(char *str,decimal_t *dec)
         DISP_FORMAT_ENG
     */
 
-    memset(tstr,0,DISP_STR_LENGTH);
+    memset(tstr,0,(2*DISP_STR_LENGTH));
 
     strIndex= 0;    // zero string length
     dpIndex = 0;    // dp at zero is not valid because such a string would be "0.123" making dpIndex=1
@@ -632,7 +685,7 @@ void NumberToStringDEC_FIXED(char *str,decimal_t *dec)
 
     // so we build up the string one nibble at a time
     sig_index=0;
-    while((sig_index<BCD_DIGIT_COUNT)&&(strIndex<DISP_STR_LENGTH)){
+    while((sig_index<BCD_DIGIT_COUNT)&&(strIndex<DISPLAY_DIGIT_COUNT)){
         if(strIndex==dpIndex){
             tstr[strIndex++] = '.'; // insert dp
         } else {
@@ -642,25 +695,29 @@ void NumberToStringDEC_FIXED(char *str,decimal_t *dec)
         }
     }
 
-    if((strIndex == dpIndex)&&(strIndex<DISP_STR_LENGTH)){  // we still need to add dp
+    if((strIndex == dpIndex)&&(strIndex<DISPLAY_DIGIT_COUNT)){  // we still need to add dp
         tstr[strIndex++] = '.';
     }
 
+//    Debug_PrintDecimal_t("1strIndex=%d\r\n",strIndex);
+
     // fill to the end with zeros
-    while(strIndex<DISP_STR_LENGTH){
+    while(strIndex<DISPLAY_DIGIT_COUNT){
         tstr[strIndex++] = '0';
     }
 
     // now we chop off so many places after the dp and fill the string with spaces.
     chopIndex = dpIndex+display.points;
     dpIndex++;
-    while(dpIndex<DISP_STR_LENGTH){
+    while(dpIndex<DISPLAY_DIGIT_COUNT){
         if(chopIndex<dpIndex)
             tstr[dpIndex] = ' ';
         dpIndex++;
     }
 
     tstr[strIndex] = 0; // END
+
+ //   Debug_PrintDecimal_t("2strIndex=%d\r\n",strIndex);
 
     // copy it out.
     strIndex++; //so we copy the null too

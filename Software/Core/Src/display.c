@@ -19,7 +19,7 @@
  *	uint8_t		i2cbus;	  --> bus 1 or bus 2
  *	uint8_t		matrix;   --> IS31FL3730 matrix A or matrix B
  *  **	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	**	*/
-DigitAddress digitAddress[DIGIT_COUNT] = {
+DigitAddress digitAddress[DISPLAY_DIGIT_COUNT] = {
 	{LD1_LD2_ADDR,I2C_1,IS31_REG_MATRIX_2,0},
 	{LD1_LD2_ADDR,I2C_1,IS31_REG_MATRIX_1,0},
 	{LD3_LD4_ADDR,I2C_1,IS31_REG_MATRIX_2,0},
@@ -189,7 +189,7 @@ void	DisplayInitialize(void)
 	gIndicators =0;
 
 	digit = 0;
-	while(digit < DIGIT_COUNT){
+	while(digit < DISPLAY_DIGIT_COUNT){
 		phi2c = I2CHandlePtr(digit);
 		if((phi2c) && (digitAddress[digit].matrix == IS31_REG_MATRIX_1)){
 			// this actually inits 1 and 2 so we skip all MATRIX_2 calls

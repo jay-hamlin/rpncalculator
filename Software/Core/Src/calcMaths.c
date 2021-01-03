@@ -29,6 +29,7 @@ int16_t BCDSubtractor(uint8_t   *sum, uint8_t   *x, uint8_t   *y,int16_t    size
 int16_t BCDAdder(uint8_t   *sum, uint8_t   *x, uint8_t   *y,int16_t    size);
 int16_t BCDCompare(uint8_t   *x, uint8_t   *y,int16_t    size);
 void    FixResultSignIfZero(decimal_t *res);
+void    Integer(decimal_t *x);
 
 void    CalcAdd(decimal_t *res,decimal_t *x,decimal_t *y)
 {
@@ -379,14 +380,11 @@ void    CalcDivide(decimal_t *res,decimal_t *x,decimal_t *y)
     // quotient is zeroed
     memset(quotient,0,BCD_DIGIT_BYTES);
 
-    Debug_PrintDecimal_t("div x",x);
-    Debug_PrintDecimal_t("div y",y);
-
     // Make sure we are not about to divide by zero.
     // we only need to look at the first digit since all numbers are left justified
-    if(GetBCDNibble(x->sig,0)==0){ // x is the divisor
-        resultSign=NOT_A_NUMBER;
-        resultExp=0;
+    if(GetBCDNibble(y->sig,0)==0){ // y is the divisor
+        res->sign = NOT_A_NUMBER;
+        res->exp = 0;
     } else {
         // copy the divisor significant digits into a double sized buffer
         // The reason is that we are going to be shifting it right as we go along
@@ -445,18 +443,14 @@ void    CalcDivide(decimal_t *res,decimal_t *x,decimal_t *y)
        } else {
             //resultExp++;
         }
-    }
-
-//    Debug_Printf("2resExp=%d\r\n",resultExp);
 
     // now copy the result
     res->sign = resultSign;
     res->exp = resultExp;
     memcpy(res->sig,quotient,BCD_DIGIT_BYTES);
-    
-    Debug_PrintDecimal_t("div res",res);
 
     FixResultSignIfZero(res);
+    }
 }
 
 /*    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **
@@ -478,4 +472,52 @@ void    FixResultSignIfZero(decimal_t *res)
         res->sign = 0;
         res->exp = 0;
     }
+}
+
+/*    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **
+ *  CalcModulo -  q = INT(x/y)
+ *                r = (q * y)
+ *                mod = (x - r)
+ *
+ *                Dividend - Divisor * INT(Dividend/Divisor)
+ *                The sign of the result is the same as the divisor (y)
+ *
+ *  INPUT:  *x - dividend
+ *          *y - divisor
+ *          *res - quotient
+ *
+ *  OUTPUT: none
+*  **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    */
+void    CalcModulo(decimal_t *res,decimal_t *x,decimal_t *y)
+{
+	decimal_t	q,r;
+
+ //   Debug_PrintDecimal_t("x=",x);
+ //   Debug_PrintDecimal_t("y=",y);
+
+	CalcDivide(&q,x,y);
+	Integer(&q);
+	CalcMultiply(&r,&q,y);
+	CalcAddSubtract(res,x,&r,REQUEST_SUBTRACT);
+
+}
+
+/*    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **
+ *  Integer -  Truncate x to be an integer
+ *
+ *  INPUT:  *x - input number
+ *
+ *  OUTPUT: none
+*  **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    **    */
+void    Integer(decimal_t *x)
+{
+	int16_t	ix;
+
+	ix = x->exp+1;
+	if(ix<0){
+		ix=0;
+	}
+	while(ix<BCD_DIGIT_COUNT){
+		SetBCDNibble(x->sig,0,ix++);  // zeros
+	}
 }
